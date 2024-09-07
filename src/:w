@@ -1,0 +1,185 @@
+#include "app.h"
+#include "component.h"
+#include "tex_manager.h"
+#include <SDL2/SDL_events.h>
+#include <SDL2/SDL_keycode.h>
+#include <SDL2/SDL_rect.h>
+#include <SDL2/SDL_video.h>
+#include <iostream>
+#include <string>
+#include <vector>
+
+
+SDL_Rect Engine::camera;
+
+SDL_Event Engine::event;
+SDL_Window* Engine::window;
+Engine::Engine() {
+  isrunning = true;
+}
+void Engine::init(const char* title, int width , int height, bool fullscreen){
+  if(SDL_Init(SDL_INIT_VIDEO)<0){
+    std::cout<<"Lol"<<'\n';
+  }
+  if(fullscreen){
+    SDL_DisplayMode dm;
+  if (SDL_GetDesktopDisplayMode(0, &dm) != 0)
+    {
+     SDL_Log("SDL_GetDesktopDisplayMode failed: %s", SDL_GetError());
+    }
+  
+    Engine::window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, dm.w, dm.h, 0);
+    Engine::camera.w = dm.w /2;
+    Engine::camera.h = dm.h /2;
+  }
+  else{
+    Engine::window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, 0);
+  }
+  if(!Engine::window){
+    std::cout<<"Couldn't initialize window"<<'\n';
+  }
+  renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+  if(!renderer){
+    std::cout<<"Couldn't initialize renderer"<<'\n';
+  }
+ tex_manager::renderer = renderer;
+  tex_manager::loadMapTex();
+  std::size_t player = this->EM.createEntity();
+  this->EM.addComponentToEntity<positionComponent>(player);
+  this->EM.addComponentToEntity<velocityComponent>(player);
+  this->EM.addComponentToEntity<gravity>(player);
+  this->EM.addComponentToEntity<spriteComponent>(player,tex_manager::loadTexture("../../assets/testSprites/Pekka_Idle2.png"));
+  //this->EM.addSpriteToEntity(player, "../../assets/testSprites/knight.png");
+  std::vector<std::string> animationNames;
+  animationNames.push_back("IDLE");
+  animationNames.push_back("RUNNING");
+  animationNames.push_back("JUMPING");
+  animationNames.push_back("SHOOTING");
+
+  std::vector<int> numFrames;
+  numFrames.push_back(6);
+  numFrames.push_back(8);
+  numFrames.push_back(1);
+  numFrames.push_back(2);
+  
+  //BoundingBox position for IDLE Animation
+  std::vector<SDL_Rect> IdleBB;
+  //frame1
+  SDL_Rect frame;
+  frame.w = 20;
+  frame.h = 30;
+  frame.x = 15;
+  frame.y = 15;
+  IdleBB.push_back(frame);
+  //frame2
+  frame.w = 20;
+  frame.h = 29;
+  frame.x = 60;
+  frame.y = 16;
+  IdleBB.push_back(frame);
+  //frame3
+  frame.w = 20;
+  frame.h = 29;
+  frame.x = 105;
+  frame.y = 16;
+  IdleBB.push_back(frame);
+  //frame4
+  frame.w = 20;
+  frame.h = 29;
+  frame.x = 150;
+  frame.y = 16;
+  IdleBB.push_back(frame);
+  //frame5
+  frame.w = 20;
+  frame.h = 30;
+  frame.x = 195;
+  frame.y = 15;
+  IdleBB.push_back(frame);
+  //frame6
+  frame.w = 20;
+  frame.h = 30;
+  frame.x = 240;
+  frame.y = 15;
+  IdleBB.push_back(frame);
+  //BoundingBox position for Running Animation
+  std::vector<SDL_Rect> Running;
+  //Frame1
+  frame.w = 24;
+  frame.h = 30;
+  frame.x = 282;
+  frame.y = 15;
+  Running.push_back(frame);
+  //frame2
+  frame.w = 22;
+  frame.h = 29;
+  frame.x = 328;
+  frame.y = 16;
+  //frame3
+  frame.w = 20;
+  frame.h = 29;
+  frame.x = 15;
+  frame.y = 61;
+  //frame4
+  frame.w = 20;
+  frame.h = 31;
+  frame.x = 60;
+  frame.y = 60;
+  
+  //frame5
+  frame.w = 20;
+  frame.h = 30;
+  frame.x = 105;
+  frame.y = 60;
+
+
+
+
+
+  
+
+
+
+
+  this->EM.addComponentToEntity<animation>(player, 200,  );
+  this->EM.addComponentToEntity<keyBoardInput>(player, this->EM.getComponent<velocityComponent>(player));
+  //this->EM.addComponentToEntity<collision>(, Args &&args...)
+  this->tileMap.init(&EM);
+}
+
+void Engine::handleEvents(){
+  
+  if(SDL_PollEvent(&Engine::event)!=0){
+    if(Engine::event.type == SDL_KEYDOWN){
+      switch (Engine::event.key.keysym.sym){
+        case SDLK_ESCAPE:
+          this->isrunning = false;
+      }
+    }       
+  
+  }
+
+}
+
+void Engine::update(){
+
+ this->EM.updateEntities(); 
+
+}
+void Engine::render(){
+  SDL_RenderClear(renderer);
+  this->tileMap.renderMap(); 
+  this->EM.renderEntites();
+  SDL_RenderPresent(renderer);
+}
+
+bool Engine::running(){
+  return isrunning;
+}
+void Engine::clean(){
+
+}
+Engine::~Engine()
+{
+
+}
+
