@@ -1,0 +1,3 @@
+/home/ns68/Documents/CPP/platformer/src/build/CMakeFiles/platformer.dir
+/home/ns68/Documents/CPP/platformer/src/build/CMakeFiles/edit_cache.dir
+/home/ns68/Documents/CPP/platformer/src/build/CMakeFiles/rebuild_cache.dir

@@ -1,0 +1,286 @@
+#include "system.h"
+#include "app.h"
+#include "component.h"
+#include "componentManager.h"
+#include "entity.h"
+#include "tex_manager.h"
+#include <SDL2/SDL_events.h>
+#include <SDL2/SDL_rect.h>
+#include <SDL2/SDL_render.h>
+#include <SDL2/SDL_stdinc.h>
+#include <SDL2/SDL_timer.h>
+#include <cstdlib>
+#include <memory>
+#include <iostream>
+#include <ostream>
+
+
+system::system(componentManager& CM): CM(CM) {
+
+}
+void system::addEntity(std::shared_ptr<entity> entity){
+  this->entites.push_back(entity);
+}
+movementSystem::movementSystem(componentManager& CM) : system(CM){
+}
+
+
+void movementSystem::update(){
+
+  for (auto entity : entites){
+    if(entity->hasComponent<velocityComponent>()){
+      auto position = this->CM.getComponent<positionComponent>(entity->getID());
+      auto velocity = this->CM.getComponent<velocityComponent>(entity->getID());
+      if(velocity->vy != 0){
+        velocity->setIsJumping(true);
+      } 
+      else{
+        velocity->setIsJumping(false);
+      }
+      if(velocity->vx !=0)
+      {
+        velocity->setIsMoving(true);
+      }     
+      else{
+        velocity->setIsMoving(false);
+      }
+      float newPosx = position->x + (velocity->vx  * (1.f / 60.f) );
+      float newPosy = position->y + (velocity->vy * (1.f / 60.f)) ;
+      std::cout << newPosy <<std::endl;
+      position->setPosition(newPosx , newPosy);
+    }
+
+  }
+}
+
+
+movementSystem::~movementSystem(){
+
+}
+
+keyInputSystem::keyInputSystem(componentManager& CM) : system(CM){
+}
+
+void keyInputSystem::update(){
+
+
+  auto velocity = this->CM.getComponent<velocityComponent>(0);
+  if(Engine::event.type == SDL_KEYDOWN){
+    switch (Engine::event.key.keysym.sym) {
+
+      case SDLK_a:
+        velocity->vx = -30;
+        break;
+      case SDLK_d:
+        velocity->vx = 30;
+        break;
+      case SDLK_SPACE:
+          velocity->vy = -50;
+        break;
+      default:
+        break;
+
+
+    }
+  }
+  if(Engine::event.type == SDL_KEYUP){
+    switch (Engine::event.key.keysym.sym) {
+      case SDLK_a:
+        velocity->vx = 0;
+        break;
+      case SDLK_d:
+        velocity->vx = 0;
+        break;
+      default:
+        break;
+    }
+  }
+
+
+}
+
+renderSystem::renderSystem(componentManager& CM) : system(CM){};
+
+
+void renderSystem::update() {
+  for (std::shared_ptr<entity> entity : this->entites){
+    if(entity->hasComponent<spriteComponent>() && entity->hasComponent<velocityComponent>()){
+      std::shared_ptr<spriteComponent> sprite = this->CM.getComponent<spriteComponent>(entity->getID());
+      std::shared_ptr<positionComponent> position = this->CM.getComponent<positionComponent>(entity->getID());
+      sprite->destRect.x = position->getX();
+      sprite->destRect.y = position->getY();
+    }
+  }
+}
+
+void renderSystem::render(){
+  std::shared_ptr<entity> player = this->entites[0];
+  std::shared_ptr<spriteComponent> playerPos = this->CM.getComponent<spriteComponent>(0);
+  Engine::camera.x = playerPos->destRect.x + (playerPos->destRect.w / 2 ) - (Engine::camera.w / 2);
+  if(Engine::camera.x < 0 ){
+    Engine::camera.x = 0;
+  }
+  if(Engine::camera.x > map::COLUMNS * map::tileWidth - Engine::camera.w){
+    Engine::camera.x =  map::COLUMNS * map::tileWidth - Engine::camera.w;
+  }
+  for (std::shared_ptr<entity> entity : this->entites){
+    if(entity->hasComponent<spriteComponent>()){
+
+      auto sprite= this->CM.getComponent<spriteComponent>(entity->getID());
+      //auto position = this->CM.getComponent<positionComponent>(entity->getID());
+      //if(sprite->destRect.x >= Engine::camera.x && sprite->destRect.x < Engine::camera.x + Engine::camera.w){ 
+      tex_manager::drawTexture(sprite->texture, &sprite->srcRect, &sprite->destRect);
+      //}
+    }
+  } 
+}
+
+
+collisionSystem::collisionSystem(componentManager& CM) : system(CM) {}
+
+bool collisionSystem::detectCollision(SDL_Rect& A, SDL_Rect& B){
+  bool result = false;
+  //AABB collision
+  if( ((A.x + A.w) > B.x ) && ((B.x + B.w) > A.x) && ((A.y + A.h) > B.y ) && ((B.y + B.h) > A.y)){
+    result = true; 
+  }
+  return result;
+}
+
+bool collisionSystem::Xcollision(SDL_Rect& A, SDL_Rect& B){
+  bool result = false;
+  if( ((A.x + A.w) > B.x ) && ((B.x + B.w) > A.x) ){
+    result = true; 
+  }
+  return  result;
+}
+bool collisionSystem::Ycollision(SDL_Rect& A, SDL_Rect& B){
+  bool result = false;
+  if(((A.y + A.h) > B.y ) && ((B.y + B.h) > A.y)){
+    result = true; 
+  }
+  return  result;
+}
+bool collisionSystem::sideCollision(SDL_Rect& A, SDL_Rect& B){
+
+  //Left and right face for box A
+  int l1Face = A.x;
+  int r1Face = A.x + A.w;
+
+  //Left and right face for box B 
+  int l2Face = B.x;
+  int r2Face = B.x + B.w;
+
+  if(r1Face > l2Face && r2Face > l1Face){
+    return true;
+  }
+  else{
+    return false;
+  }
+
+}
+void collisionSystem::AABB(){
+
+  auto playerPos = this->CM.getComponent<positionComponent>(0);
+  auto playerSprite = this->CM.getComponent<spriteComponent>(0);
+  for(std::shared_ptr<entity> entity : entites){
+    if(entity->hasComponent<collision>()){
+      auto collisionComponent =  this->CM.getComponent<collision>(entity->getID());
+      SDL_Rect playerBB;
+      playerBB.x = playerPos->getX();
+      playerBB.y = playerPos->getY();
+      playerBB.h = playerSprite->destRect.h;
+      playerBB.w = playerSprite->destRect.w;
+
+      if( true == this->detectCollision(playerBB, collisionComponent->getBoundingBox())) {
+        auto velocity = this->CM.getComponent<velocityComponent>(0);
+
+        if(this->Ycollision(playerBB,collisionComponent->getBoundingBox())){
+
+          SDL_Rect tileBB = collisionComponent->getBoundingBox();
+          float leftP = std::max(playerBB.x , tileBB.x);
+          float rightP = std::min(playerBB.x + playerBB.w , tileBB.x + tileBB.w);
+          float topP = std::min(playerBB.y + playerBB.h , tileBB.y + tileBB.h); 
+          float bottomP = std::max(playerBB.y , tileBB.y);
+          float dx = rightP - leftP;
+          float dy = topP - bottomP;
+
+          //Vertical collision resolution
+          if(dx > dy ){
+            //Head collision
+            if(playerBB.y + playerBB.h > tileBB.y + tileBB.h){
+              velocity->vy*=-1;
+            }
+            //floor collision
+            else{
+            //Cap the y component
+            playerPos->y = tileBB.y  - playerBB.h;
+            //Set the Y velocity to zero
+            velocity->vy = 0;
+
+            }
+          }
+          //Horizontal collision resolution
+          if(dy > dx){
+
+            velocity->vx = 0;
+            //right face collision
+            if(playerBB.x + playerBB.w >tileBB.x){
+            playerPos->x = tileBB.x- playerBB.w;
+            }
+            else{
+              playerPos->x = tileBB.x +tileBB.w;  
+            }
+          }
+
+
+
+
+        }
+      }
+
+    }
+  }
+}
+
+void collisionSystem::update(){
+  this->AABB();
+}
+
+gravitySystem::gravitySystem(componentManager& CM) : system(CM){
+}
+
+void gravitySystem::update(){
+  for(std::shared_ptr<entity> entity : entites){
+    if(entity->hasComponent<gravity>()){
+      auto velocity =  this->CM.getComponent<velocityComponent>(entity->getID());
+      auto gravityAcceleration = this->CM.getComponent<gravity>(entity->getID());
+      velocity->setVelocity(velocity->vx, velocity->vy  + ((1.f/60.f) * gravityAcceleration->downwardsAcceleration()));
+    }
+  }
+}
+
+
+animationSystem::animationSystem(componentManager& CM) : system(CM){
+
+}
+
+
+void animationSystem::update(){
+  for(auto entity : entites){
+    if(entity->hasComponent<animation>()){
+      std::shared_ptr<animation> animationComponent = this->CM.getComponent<animation>(entity->getID());
+      std::shared_ptr<spriteComponent> sprite = this->CM.getComponent<spriteComponent>(entity->getID());
+      std::shared_ptr<velocityComponent> velocity = this->CM.getComponent<velocityComponent>(entity->getID());
+      //I dont like this way, Not readable and difficult to maintain, instead would just like to update a class that sets the animation Go chat
+      if(!velocity->isMoving()){
+        Uint32 currentTime = SDL_GetTicks();
+        if(currentTime > (animationComponent->lastUpdatedTime + animationComponent->frameDelay) ){
+          animationComponent->frameCounter = (animationComponent->frameCounter + 1) % animationComponent->totalFrames;
+          animationComponent->lastUpdatedTime = currentTime;
+          sprite->srcRect.x = (animationComponent->frameCounter * sprite->srcRect.w);
+        }
+      }  
+    }
+  }
+}
