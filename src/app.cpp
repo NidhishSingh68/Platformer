@@ -15,7 +15,8 @@ SDL_Rect Engine::camera;
 SDL_Event Engine::event;
 SDL_Window* Engine::window;
 Engine::gameState Engine::currentState;
-float Engine::scoreCounter = 0;
+float Engine::scoreCounter;
+bool Engine::isrunning;
 
 Engine::Engine() {
   Engine::currentState = playing;
@@ -185,14 +186,6 @@ void Engine::init(const char* title, int width , int height, bool fullscreen){
   frame.y = 105;
   shooting.push_back(frame);
 
-
-
-
-  
-
-
-
-
   this->EM.addComponentToEntity<animation>(player, 40);
   auto animationComponent = this->EM.getComponent<animation>(player);
   animationComponent->insertAnimation("IDLE",IdleBB);
@@ -229,6 +222,7 @@ void Engine::update(){
  
  this->EM.updateEntities(); 
  this->EM.destroyEntity();
+  this->EM.spawnEnemy();
 }
 void Engine::render(){
   SDL_RenderClear(renderer);

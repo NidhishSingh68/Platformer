@@ -7,6 +7,7 @@
 #include <SDL2/SDL_video.h>
 #include <cstddef>
 #include <memory>
+#include <ostream>
 
 
 entityManager::entityManager() : moveableEntites(this->CM) ,keyboardInputAffectedEntites(this->CM), collidables(this->CM), gravityAffectedEntites(this->CM) , texturedEntites(this->CM) , animatedEntites(this->CM),AIPoweredEntites(this->CM){
@@ -62,9 +63,16 @@ void entityManager::destroyEntity(){
       this->bullets.erase(bullets.begin() + bulletID);
       std::cout<<"Destroyed" << std::endl;
       std::cout<<"size" << this->bullets.size()<<std::endl;
-
     }
   }
+ for(std::size_t ID = 0 ; ID < this->enemey.size() ; ID++){
+    std::shared_ptr<entity> enemy = this->enemey[ID];
+    if(!enemy->DOA()){
+      this->CM.removeEntity(enemy->getID());
+      this->enemey.erase(enemey.begin() + ID);
+      
+    }
+  } 
 }
 
 void entityManager::updateEntities(){
@@ -125,7 +133,7 @@ void entityManager::spawnBullet(){
 
 
 void entityManager::spawnEnemy(){
-  if(this->enemey.size() < 10){
+  if(this->enemey.size() < 2){
     std::size_t enemyID = this->createEntity();
     this->enemey.push_back(this->entites[enemyID]);
 

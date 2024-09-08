@@ -27,6 +27,8 @@ class Engine{
   static SDL_Event event;
   static float scoreCounter;
   static gameState currentState;
+
+  static bool isrunning;
    Engine();
    void init(const char* title, int width, int height, bool fullscreen);
    void handleEvents();
@@ -36,7 +38,6 @@ class Engine{
    bool running();
    ~Engine();
 private:
-  bool isrunning;
   SDL_Renderer* renderer;
   std::vector<entity> entities;
   entityManager EM;

@@ -401,7 +401,7 @@ void collisionSystem::handleCollision(){
                 }
 
               } 
-              //Player enemy collision
+              //bullet enemy collision
               if(typeE1 == type::enemy && typeE2 == type::bullet || typeE1 == type::bullet && typeE2 == type::enemy){
               std::shared_ptr<entity> enemy;
               std::shared_ptr<entity> bullet;
@@ -416,6 +416,21 @@ void collisionSystem::handleCollision(){
               enemy->setDOA(false);
               bullet->setDOA(false);
               Engine::scoreCounter++;
+            }
+            //player enemy collision
+              if(typeE1 == type::enemy && typeE2 == type::player || typeE1 == type::player && typeE2 == type::enemy){
+              std::shared_ptr<entity> enemy;
+              std::shared_ptr<entity> player;
+              if(typeE1 == type::enemy){
+                enemy = entity1;
+                player = entity2;
+              }
+              else{
+                enemy = entity2;
+                player = entity1;
+              }
+              player->setDOA(false);
+              Engine::isrunning = false;
             }
           }
         }
