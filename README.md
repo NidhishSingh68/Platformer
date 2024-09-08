@@ -27,6 +27,7 @@ Moving onto the installation:-
   cd Platformer
   cd src
   mkdir build
+  cd build
   cmake ..
   make
 ```
