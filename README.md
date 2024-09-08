@@ -1,1 +1,3 @@
-2D Platfomer in SDL 
+                                                                                            2D Platformer in SDL
+
+Implemented a custom ECS to handle entity properites
