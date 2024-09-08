@@ -33,6 +33,7 @@ class entityManager{
     gravitySystem gravityAffectedEntites;
     renderSystem texturedEntites;
     animationSystem animatedEntites;
+    aiSystem AIPoweredEntites;
   public:
     entityManager();
     std::size_t createEntity(); 

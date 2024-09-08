@@ -9,7 +9,7 @@
 #include <memory>
 
 
-entityManager::entityManager() : moveableEntites(this->CM) ,keyboardInputAffectedEntites(this->CM), collidables(this->CM), gravityAffectedEntites(this->CM) , texturedEntites(this->CM) , animatedEntites(this->CM){
+entityManager::entityManager() : moveableEntites(this->CM) ,keyboardInputAffectedEntites(this->CM), collidables(this->CM), gravityAffectedEntites(this->CM) , texturedEntites(this->CM) , animatedEntites(this->CM),AIPoweredEntites(this->CM){
   this->EID = -1;
   this->entityCounter = 0;
 }
@@ -23,6 +23,7 @@ std::size_t entityManager::createEntity(){
   this->gravityAffectedEntites.addEntity(this->entites[EID]);
   this->texturedEntites.addEntity(this->entites[EID]);
   this->animatedEntites.addEntity(this->entites[EID]);
+  this->AIPoweredEntites.addEntity(this->entites[EID]);
   return EID;
 }
 
@@ -74,6 +75,7 @@ void entityManager::updateEntities(){
   this->collidables.update();
   this->texturedEntites.update();
   this->animatedEntites.update();
+  this->AIPoweredEntites.update();
 
 }
 
@@ -133,8 +135,8 @@ void entityManager::spawnEnemy(){
     int platformIndex = distr(gen);
     std::shared_ptr<collision> tileBB = this->CM.getComponent<collision>(this->platforms[platformIndex]->getID());
     SDL_Rect enemyBB;
-    enemyBB.w = 40;
-    enemyBB.h = 40;
+    enemyBB.w = 50;
+    enemyBB.h = 50;
     std::uniform_int_distribution<std::mt19937::result_type> distr2(tileBB->getBoundingBox().x, tileBB->getBoundingBox().x+tileBB->getBoundingBox().w);
     int xCord = distr2(gen);
     enemyBB.x =xCord;
@@ -144,7 +146,8 @@ void entityManager::spawnEnemy(){
     this->addComponentToEntity<velocityComponent>(enemyID,20,0);
     this->addComponentToEntity<collision>(enemyID,enemyBB,enemy);
     this->addComponentToEntity<gravity>(enemyID);
-    this->addComponentToEntity<spriteComponent>(enemyID,tex_manager::loadTexture("../../assets/Eye ball Monster/EyeBall Monster-Sheet.png") , 40,40);
+    this->addComponentToEntity<spriteComponent>(enemyID,tex_manager::loadTexture("../../assets/Eye ball Monster/EyeBall Monster-Sheet.png") , enemyBB.w,enemyBB.h);
+    this->addComponentToEntity<enemyAI>(enemyID);
 
     std::vector<SDL_Rect> IDLE;
     SDL_Rect enemyIdle;
@@ -173,6 +176,12 @@ void entityManager::spawnEnemy(){
     this->addComponentToEntity<animation>(enemyID,50);
     this->CM.getComponent<animation>(enemyID)->insertAnimation("WALKING",IDLE);
     this->CM.getComponent<animation>(enemyID)->setAnimation("WALKING");
+    //Attack Animation
+    
+    
+    
+    
+    
   }
 }
 

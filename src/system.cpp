@@ -12,27 +12,37 @@
 #include <SDL2/SDL_timer.h>
 #include <cstddef>
 #include <cstdlib>
-#include <iterator>
 #include <memory>
-#include <iostream>
-#include <ostream>
+#include <vector>
 
 
 system::system(componentManager& CM): CM(CM) {
 
 }
 void system::addEntity(std::shared_ptr<entity> entity){
-  this->entites.push_back(entity);
+  system::entites.push_back(entity);
 }
+
+void system::removeEntity(){
+  for(std::size_t i = 0 ; i < system::entites.size() ; i++){
+    std::shared_ptr<entity> entity = entites[i];
+    if(entity->DOA() == false){
+      entites.erase(entites.begin() + i); 
+    }
+  }
+}
+
 movementSystem::movementSystem(componentManager& CM) : system(CM){
 }
 
-
+void movementSystem::addEntity(std::shared_ptr<entity> entity){
+    this->entites.push_back(entity);
+}
 void movementSystem::update(){
    SDL_DisplayMode dm;
   SDL_GetDesktopDisplayMode(0, &dm);
-  for (std::size_t i =0; i < this->entites.size() ; i++){
-    auto entity = this->entites[i];
+  for (std::size_t i =0; i < entites.size() ; i++){
+    auto entity = entites[i];
     if(entity->hasComponent<velocityComponent>() && entity->hasComponent<spriteComponent>() && entity->DOA() == true){
       auto position = this->CM.getComponent<positionComponent>(entity->getID());
       auto velocity = this->CM.getComponent<velocityComponent>(entity->getID());
@@ -65,10 +75,6 @@ void movementSystem::update(){
       position->setPosition(newPosx , newPosy);
       }
     }
-    if(entity->DOA() == false){
-      this->entites.erase(entites.begin() + i); 
-    }
-
   }
 }
 
@@ -85,7 +91,9 @@ void keyInputSystem::spawnBullet(){
 
    
 }
-
+void keyInputSystem::addEntity(std::shared_ptr<entity> entity){
+    this->entites.push_back(entity);
+}
 void keyInputSystem::update(){
 
 
@@ -154,11 +162,13 @@ void keyInputSystem::update(){
 }
 
 renderSystem::renderSystem(componentManager& CM) : system(CM){};
-
+void renderSystem::addEntity(std::shared_ptr<entity> entity){
+    this->entites.push_back(entity);
+}
 
 void renderSystem::update() {
-  for (std::size_t i =0 ; i < this->entites.size() ; i++){
-    std::shared_ptr<entity> entity = this->entites[i];
+  for (std::size_t i =0 ; i < entites.size() ; i++){
+    std::shared_ptr<entity> entity = entites[i];
     if(entity->hasComponent<spriteComponent>() && entity->hasComponent<velocityComponent>() && entity->DOA() == true){
       std::shared_ptr<spriteComponent> sprite = this->CM.getComponent<spriteComponent>(entity->getID());
       std::shared_ptr<positionComponent> position = this->CM.getComponent<positionComponent>(entity->getID());
@@ -168,14 +178,11 @@ void renderSystem::update() {
       collisionComponent->getBoundingBox().x = sprite->destRect.x;
       collisionComponent->getBoundingBox().y = sprite->destRect.y;
     }
-    if(entity->DOA() == false){
-      this->entites.erase(entites.begin() + i); 
-    }
   }
 }
 
 void renderSystem::render(){
-  std::shared_ptr<entity> player = this->entites[0];
+  std::shared_ptr<entity> player = entites[0];
   std::shared_ptr<spriteComponent> playerPos = this->CM.getComponent<spriteComponent>(0);
   Engine::camera.x = playerPos->destRect.x + (playerPos->destRect.w / 2 ) - (Engine::camera.w / 2);
   if(Engine::camera.x < 0 ){
@@ -191,16 +198,11 @@ void renderSystem::render(){
       auto sprite= this->CM.getComponent<spriteComponent>(entity->getID());
       tex_manager::drawTexture(sprite->texture, sprite->invert,&sprite->srcRect, &sprite->destRect);
     }
-    if(entity->DOA() == false){
-      this->entites.erase(entites.begin() + i); 
-    }
-
   }
 }
 
 
 collisionSystem::collisionSystem(componentManager& CM) : system(CM) {}
-
 bool collisionSystem::detectCollision(SDL_Rect& A, SDL_Rect& B){
   bool result = false;
   //AABB collision
@@ -269,6 +271,9 @@ bool collisionSystem::checkHorizontalCollision(SDL_Rect& A , SDL_Rect& B){
   else{
     return false;
   }
+}
+void collisionSystem::addEntity(std::shared_ptr<entity> entity){
+    this->entites.push_back(entity);
 }
 void collisionSystem::handlePlayerCollision(){
 
@@ -397,11 +402,22 @@ void collisionSystem::handleCollision(){
 
               } 
               //Player enemy collision
-              
+              if(typeE1 == type::enemy && typeE2 == type::bullet || typeE1 == type::bullet && typeE2 == type::enemy){
+              std::shared_ptr<entity> enemy;
+              std::shared_ptr<entity> bullet;
+              if(typeE1 == type::enemy){
+                enemy = entity1;
+                bullet = entity2;
+              }
+              else{
+                enemy = entity2;
+                bullet = entity2;
+              }
+              enemy->setDOA(false);
+              bullet->setDOA(false);
+              Engine::scoreCounter++;
+            }
           }
-        }
-        if(entity2->DOA() == false){
-          this->entites.erase(entites.begin() + j); 
         }
       }  
     } 
@@ -415,7 +431,9 @@ void collisionSystem::update(){
 
 gravitySystem::gravitySystem(componentManager& CM) : system(CM){
 }
-
+void gravitySystem::addEntity(std::shared_ptr<entity> entity){
+    this->entites.push_back(entity);
+}
 void gravitySystem::update(){
   for(std::shared_ptr<entity> entity : entites){
     if(entity->hasComponent<gravity>()){
@@ -430,8 +448,9 @@ void gravitySystem::update(){
 animationSystem::animationSystem(componentManager& CM) : system(CM){
 
 }
-
-
+void animationSystem::addEntity(std::shared_ptr<entity> entity){
+    this->entites.push_back(entity);
+}
 void animationSystem::update(){
   for(std::size_t i = 0 ; i < entites.size() ; i++){
     std::shared_ptr<entity> entity = entites[i];
@@ -447,9 +466,6 @@ void animationSystem::update(){
         animationComponent->lastUpdatedTime = currentTime;
       }
     }
-        if(entity->DOA() == false){
-          this->entites.erase(entites.begin() + i); 
-        }
   }
 }
 
@@ -457,17 +473,18 @@ void animationSystem::update(){
 aiSystem::aiSystem(componentManager& CM) : system(CM){
 
 }
-
-
+void aiSystem::addEntity(std::shared_ptr<entity> entity){
+    this->entites.push_back(entity);
+}
 void aiSystem::update(){
   auto playerPos = this->CM.getComponent<positionComponent>(0);
-  for (auto entity : this->entites){
-    if(entity->hasComponent<aiSystem>() && entity->DOA() == true ){
+  for (auto entity : entites){
+    if(entity->hasComponent<enemyAI>() && entity->DOA() == true ){
       auto AI =this->CM.getComponent<enemyAI>(entity->getID());
       auto enemyAnimation = this->CM.getComponent<animation>(entity->getID());
       auto enemyPos = this->CM.getComponent<positionComponent>(entity->getID());  
       auto enemyVelocity = this->CM.getComponent<velocityComponent>(entity->getID());
-      float dirctionX = (playerPos->x - enemyPos->x) / (playerPos->x - enemyPos->x); 
+      int dirctionX = (playerPos->x - enemyPos->x) / (playerPos->x - enemyPos->x); 
       enemyVelocity->vx *= dirctionX;
       if(std::abs(playerPos->x - enemyPos->x) < AI->thresholdDistance){
         AI->isAttacking = true;
@@ -477,7 +494,6 @@ void aiSystem::update(){
         AI->isAttacking = false;
         enemyAnimation->setAnimation("WALKING");
       }
-      
     }
   }
 }

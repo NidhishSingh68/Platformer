@@ -15,6 +15,8 @@ SDL_Rect Engine::camera;
 SDL_Event Engine::event;
 SDL_Window* Engine::window;
 Engine::gameState Engine::currentState;
+float Engine::scoreCounter = 0;
+
 Engine::Engine() {
   Engine::currentState = playing;
   isrunning = true;

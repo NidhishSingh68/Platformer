@@ -180,6 +180,10 @@ healthComponent::healthComponent(){
   this->health = 100;
 }
 
+enemyAI::enemyAI(){
+  this->thresholdDistance = 50;
+  this->isAttacking = false;
+}
 
 
 

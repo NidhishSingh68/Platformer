@@ -13,14 +13,15 @@ public:
   system(componentManager& CM);
   std::vector<std::shared_ptr<entity>> entites;
   componentManager& CM;
-  void addEntity(std::shared_ptr<entity> entity);
-  void removeEntity(entityID ID);
+  virtual void addEntity(std::shared_ptr<entity> entity);
+  void removeEntity();
   virtual void update() = 0;
 };
 
 
 class movementSystem : public system{
 public:
+  void addEntity(std::shared_ptr<entity> entity) override;
   movementSystem(componentManager& CM);
   void update() override; 
   ~movementSystem();
@@ -28,6 +29,8 @@ public:
 
 class keyInputSystem: public system{
 public:
+
+  void addEntity(std::shared_ptr<entity> entity) override;
   keyInputSystem(componentManager& CM);
   void spawnBullet();
   void update() override;
@@ -35,6 +38,8 @@ public:
 
 class renderSystem : public system{
   public:
+
+  void addEntity(std::shared_ptr<entity> entity) override;
     renderSystem(componentManager& CM);
     void update() override;
     void render();
@@ -50,6 +55,8 @@ class collisionSystem : public system{
   void handlePlayerCollision();
   void handleBulletCollision();  
   public:
+void addEntity(std::shared_ptr<entity> entity) override;
+
     SDL_Rect collisionBB(SDL_Rect& A , SDL_Rect& B);
     bool checkHorizontalCollision(SDL_Rect& A , SDL_Rect& B);
     collisionSystem(componentManager& CM);  
@@ -58,6 +65,8 @@ class collisionSystem : public system{
 
 class gravitySystem : public system{
   public:
+
+  void addEntity(std::shared_ptr<entity> entity) override;
     gravitySystem(componentManager& CM);
     void update() override;
 };
@@ -65,6 +74,8 @@ class gravitySystem : public system{
 
 class animationSystem : public system{
   public:
+
+  void addEntity(std::shared_ptr<entity> entity) override;
     animationSystem(componentManager& CM);
     void update() override;
 };
@@ -73,6 +84,8 @@ class animationSystem : public system{
 class aiSystem : public system{
   
 public:
+
+  void addEntity(std::shared_ptr<entity> entity) override;
   aiSystem(componentManager& CM);
   void update() override;
 

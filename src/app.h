@@ -24,8 +24,8 @@ class Engine{
   };
   static SDL_Window* window;
   static SDL_Rect camera;
-   static SDL_Event event;
-
+  static SDL_Event event;
+  static float scoreCounter;
   static gameState currentState;
    Engine();
    void init(const char* title, int width, int height, bool fullscreen);
