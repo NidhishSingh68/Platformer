@@ -133,7 +133,7 @@ void entityManager::spawnBullet(){
 
 
 void entityManager::spawnEnemy(){
-  if(this->enemey.size() < 2){
+  if(this->enemey.size() < 10){
     std::size_t enemyID = this->createEntity();
     this->enemey.push_back(this->entites[enemyID]);
 
