@@ -38,11 +38,14 @@ void movementSystem::update(){
       auto velocity = this->CM.getComponent<velocityComponent>(entity->getID());
       auto collisionComponent = this->CM.getComponent<collision>(entity->getID());
       std::shared_ptr<spriteComponent> sprite = this->CM.getComponent<spriteComponent>(entity->getID());
-      if(velocity->vx < 0){
-        sprite->invert = true;
-      }
-      else{
-        sprite->invert = false;
+      //Only apply tranforamtion if the character is moving
+      if(velocity->vx !=0){
+        if(velocity->vx < 0){
+          sprite->invert = true;
+        }
+        else{
+          sprite->invert = false;
+        }
       }
       float newPosx = position->x + (velocity->vx  * (1.f / 60.f) );
       float newPosy = position->y + (velocity->vy * (1.f / 60.f)) ;
@@ -340,7 +343,7 @@ void collisionSystem::handleCollision(){
             type typeE2 = collisionComponentE2->getEntityType();
 
             //Bullet wall collision
-            if( (typeE1 == bullet && typeE2 == tile) || (typeE2 == bullet && typeE1 == bullet) ){
+            if( (typeE1 == bullet && typeE2 == tile) || (typeE2 == bullet && typeE1 == tile) ){
               std::shared_ptr<entity> bullet;
               if(collisionComponentE1->getEntityType() == type::bullet){
                 bullet = entity1;

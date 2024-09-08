@@ -129,7 +129,6 @@ void entityManager::spawnEnemy(){
 
     std::random_device rd;
     std::mt19937 gen(rd());
-
     std::uniform_int_distribution<std::mt19937::result_type> distr(0, this->platforms.size()-1);
     int platformIndex = distr(gen);
     std::shared_ptr<collision> tileBB = this->CM.getComponent<collision>(this->platforms[platformIndex]->getID());
