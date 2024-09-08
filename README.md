@@ -8,6 +8,8 @@ Implemented a Custom ECS to handle entity properties
 
 
 
+![Screenshot of an instance of the game](assets/GAMEPLAY.png)
+
 
 
 ## Installation
