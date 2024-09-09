@@ -15,7 +15,7 @@
 #include <memory>
 #include <vector>
 
-
+ std::vector<std::shared_ptr<entity>> system::entites;
 system::system(componentManager& CM): CM(CM) {
 
 }
@@ -24,7 +24,7 @@ void system::addEntity(std::shared_ptr<entity> entity){
 }
 
 void system::removeEntity(){
-  for(std::size_t i = 0 ; i < system::entites.size() ; i++){
+  for(std::size_t i = 0 ; i < entites.size() ; i++){
     std::shared_ptr<entity> entity = entites[i];
     if(entity->DOA() == false){
       entites.erase(entites.begin() + i); 

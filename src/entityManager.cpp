@@ -19,12 +19,7 @@ std::size_t entityManager::createEntity(){
   this->EID++;
   this->entityCounter++;
   this->entites[EID] = std::make_shared<entity>(EID);
-  this->moveableEntites.addEntity(this->entites[EID]);
-  this->collidables.addEntity(this->entites[EID]);
-  this->gravityAffectedEntites.addEntity(this->entites[EID]);
-  this->texturedEntites.addEntity(this->entites[EID]);
-  this->animatedEntites.addEntity(this->entites[EID]);
-  this->AIPoweredEntites.addEntity(this->entites[EID]);
+  system::addEntity(this->entites[EID]);
   return EID;
 }
 
@@ -73,6 +68,8 @@ void entityManager::destroyEntity(){
       
     }
   } 
+
+  system::removeEntity();  
 }
 
 void entityManager::updateEntities(){
